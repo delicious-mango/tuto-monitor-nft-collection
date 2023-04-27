@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  email             String     @unique
+  password          String
+  publicAddress     String     @unique // It would be cool to retrieve any ENS name associated with the address
+  items             Item[]
+  createdAt         DateTime   @default(now())
+  sentTransfers     Transfer[] @relation(name: "sentTransfers")
+  receivedTransfers Transfer[] @relation(name: "receivedTransfers")
+}
+
+model Item {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  owner     User       @relation(fields: [ownerId], references: [id])
+  ownerId   String     @db.ObjectId
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  transfers Transfer[]
+}
+
+model Transfer {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  item      Item     @relation(fields: [itemId], references: [id])
+  itemId    String   @db.ObjectId
+  from      User     @relation(name: "sentTransfers", fields: [fromId], references: [id])
+  fromId    String   @db.ObjectId
+  to        User     @relation(name: "receivedTransfers", fields: [toId], references: [id])
+  toId      String   @db.ObjectId
+  createdAt DateTime @default(now())
+}
+
+model RevokedToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  jti       String   @unique
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+}
