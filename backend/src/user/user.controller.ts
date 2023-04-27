@@ -1,14 +1,15 @@
 import {
-  Controller,
-  Get,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
   HttpException,
+  Param,
+  Patch,
 } from '@nestjs/common';
-import { UserService } from './user.service';
 import { Prisma } from '@prisma/client';
+
+import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
@@ -26,7 +27,20 @@ export class UserController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.userService.findByUnique(id);
+    try {
+      return this.userService.findByUnique(id);
+    } catch (err: unknown) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        switch (err.code) {
+          case 'P2025':
+            throw new HttpException('User not found', 404);
+          default:
+            break;
+        }
+      }
+      console.error(err);
+      throw new HttpException('Internal server error', 500);
+    }
   }
 
   @Patch(':id')
@@ -34,11 +48,37 @@ export class UserController {
     @Param('id') id: string,
     @Body() updateUserDto: Prisma.UserUpdateInput,
   ) {
-    return this.userService.update(id, updateUserDto);
+    try {
+      return this.userService.update(id, updateUserDto);
+    } catch (err: unknown) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        switch (err.code) {
+          case 'P2025':
+            throw new HttpException('User not found', 404);
+          default:
+            break;
+        }
+        console.error(err);
+        throw new HttpException('Internal server error', 500);
+      }
+    }
   }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return this.userService.remove(id);
+    try {
+      return this.userService.remove(id);
+    } catch (err: unknown) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        switch (err.code) {
+          case 'P2025':
+            throw new HttpException('User not found', 404);
+          default:
+            break;
+        }
+      }
+      console.error(err);
+      throw new HttpException('Internal server error', 500);
+    }
   }
 }
