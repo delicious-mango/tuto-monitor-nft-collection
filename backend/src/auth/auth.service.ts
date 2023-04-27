@@ -1,34 +1,38 @@
 import { HttpException, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { RevokedToken } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import * as jose from 'jose';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Credentials } from '../credentials/credentials.interface';
+import { InvalidTokenError } from '../errors/invalid-token-error/invalid-token-error';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
-import { InvalidTokenError } from '../errors/invalid-token-error/invalid-token-error';
+import { JwtPayload } from 'src/auth/jwt-payload/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
   private readonly encoder: TextEncoder = new TextEncoder();
   constructor(
-    private prisma: PrismaService,
-    private userService: UserService,
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
   ) {}
 
   async signUp(signUpDto: SignUpDto): Promise<string> {
     const user = await this.userService.create(signUpDto);
 
-    return new jose.SignJWT({})
-      .setProtectedHeader({ alg: 'HS256' })
-      .setJti(uuidv4())
-      .setIssuedAt()
-      .setExpirationTime('2h')
-      .setSubject(user.id)
-      .sign(this.encoder.encode(process.env.JWT_SECRET));
+    return this.jwtService.signAsync(
+      {},
+      {
+        algorithm: 'HS256',
+        expiresIn: '2h',
+        jwtid: uuidv4(),
+        subject: user.id,
+      },
+    );
   }
 
   async signIn(signInDto: SignInDto): Promise<string> {
@@ -36,20 +40,21 @@ export class AuthService {
       signInDto.email,
     );
 
-    // Check the hash of the given password against hashed password stored in database
     if (!(await bcrypt.compare(signInDto.password, credentials.password)))
       throw new HttpException('Invalid credentials', 401);
-    return new jose.SignJWT({})
-      .setProtectedHeader({ alg: 'HS256' })
-      .setJti(uuidv4())
-      .setIssuedAt()
-      .setExpirationTime('2h')
-      .setSubject(credentials.id)
-      .sign(this.encoder.encode(process.env.JWT_SECRET));
+    return this.jwtService.signAsync(
+      {},
+      {
+        algorithm: 'HS256',
+        expiresIn: '2h',
+        jwtid: uuidv4(),
+        subject: credentials.id,
+      },
+    );
   }
 
   async revokeToken(token: string): Promise<RevokedToken> {
-    const payload = await jose.decodeJwt(token);
+    const payload = (await this.jwtService.verify(token)) as JwtPayload;
 
     if (!payload || !payload.jti) throw new InvalidTokenError();
     return this.prisma.revokedToken.create({
@@ -60,8 +65,8 @@ export class AuthService {
     });
   }
 
-  async verifyToken(token: string): Promise<jose.JWTPayload> {
-    const payload = await jose.decodeJwt(token);
+  async verifyToken(token: string): Promise<JwtPayload> {
+    const payload = (await this.jwtService.verifyAsync(token)) as JwtPayload;
 
     if (!payload || !payload.jti) throw new HttpException('Invalid token', 401);
     const revokedToken = await this.prisma.revokedToken.findUnique({

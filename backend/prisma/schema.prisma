@@ -14,7 +14,7 @@ model User {
   id                String     @id @default(auto()) @map("_id") @db.ObjectId
   email             String     @unique
   password          String
-  publicAddress     String     @unique // It would be cool to retrieve any ENS name associated with the address
+  publicAddress     String     @unique
   items             Item[]
   createdAt         DateTime   @default(now())
   sentTransfers     Transfer[] @relation(name: "sentTransfers")
@@ -42,8 +42,8 @@ model Transfer {
 }
 
 model RevokedToken {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  jti       String   @unique
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  jti       String    @unique
   expiresAt DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 }

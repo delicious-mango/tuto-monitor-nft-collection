@@ -21,11 +21,10 @@ export class UserService {
 
   async create(user: Prisma.UserCreateInput): Promise<ResponseUserDto> {
     user.password = await bcrypt.hash(user.password, 10);
-    const result = await this.prisma.user.create({ data: user });
-    // We don't want to return the password
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...createdUser } = result;
-    return createdUser;
+    return this.prisma.user.create({
+      data: user,
+      select: this.selectResponseUserDto,
+    }) as Promise<ResponseUserDto>;
   }
 
   async findAll(): Promise<ResponseUserDto[]> {
