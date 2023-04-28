@@ -27,8 +27,6 @@ export class AuthService {
     return this.jwtService.signAsync(
       {},
       {
-        algorithm: 'HS256',
-        expiresIn: '2h',
         jwtid: uuidv4(),
         subject: user.id,
       },
@@ -45,8 +43,6 @@ export class AuthService {
     return this.jwtService.signAsync(
       {},
       {
-        algorithm: 'HS256',
-        expiresIn: '2h',
         jwtid: uuidv4(),
         subject: credentials.id,
       },
@@ -65,14 +61,14 @@ export class AuthService {
     });
   }
 
-  async verifyToken(token: string): Promise<JwtPayload> {
-    const payload = (await this.jwtService.verifyAsync(token)) as JwtPayload;
+  // async verifyToken(token: string): Promise<JwtPayload> {
+  //   const payload = (await this.jwtService.verifyAsync(token)) as JwtPayload;
 
-    if (!payload || !payload.jti) throw new HttpException('Invalid token', 401);
-    const revokedToken = await this.prisma.revokedToken.findUnique({
-      where: { jti: payload.jti },
-    });
-    if (revokedToken) throw new HttpException('Invalid token', 401);
-    return payload;
-  }
+  //   if (!payload || !payload.jti) throw new HttpException('Invalid token', 401);
+  //   const revokedToken = await this.prisma.revokedToken.findUnique({
+  //     where: { jti: payload.jti },
+  //   });
+  //   if (revokedToken) throw new HttpException('Invalid token', 401);
+  //   return payload;
+  // }
 }
