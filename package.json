@@ -1,9 +1,0 @@
-{
-  "devDependencies": {
-    "@types/express": "^4.17.17"
-  },
-  "dependencies": {
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.0"
-  }
-}
