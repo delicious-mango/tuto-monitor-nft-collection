@@ -3,7 +3,8 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
+  InternalServerErrorException,
+  NotFoundException,
   Param,
   Patch,
   UseGuards,
@@ -24,7 +25,7 @@ export class UserController {
       return this.userService.findAll();
     } catch (err: unknown) {
       console.error(err);
-      throw new HttpException('Internal server error', 500);
+      throw new InternalServerErrorException();
     }
   }
 
@@ -37,13 +38,13 @@ export class UserController {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         switch (err.code) {
           case 'P2025':
-            throw new HttpException('User not found', 404);
+            throw new NotFoundException('User not found');
           default:
             break;
         }
       }
       console.error(err);
-      throw new HttpException('Internal server error', 500);
+      throw new InternalServerErrorException();
     }
   }
 
@@ -59,12 +60,12 @@ export class UserController {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         switch (err.code) {
           case 'P2025':
-            throw new HttpException('User not found', 404);
+            throw new NotFoundException('User not found');
           default:
             break;
         }
         console.error(err);
-        throw new HttpException('Internal server error', 500);
+        throw new InternalServerErrorException();
       }
     }
   }
@@ -78,13 +79,13 @@ export class UserController {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         switch (err.code) {
           case 'P2025':
-            throw new HttpException('User not found', 404);
+            throw new NotFoundException('User not found');
           default:
             break;
         }
       }
       console.error(err);
-      throw new HttpException('Internal server error', 500);
+      throw new InternalServerErrorException();
     }
   }
 }
