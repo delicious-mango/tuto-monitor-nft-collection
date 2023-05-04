@@ -5,6 +5,7 @@ import { SignUpDto } from 'src/auth/dto/sign-up.dto';
 export class LowercaseAddressPipe implements PipeTransform {
   transform(value: SignUpDto, metadata: ArgumentMetadata) {
     value.publicAddress = value.publicAddress.toLowerCase();
+
     return value;
   }
 }

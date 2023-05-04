@@ -5,7 +5,6 @@ import {
   Controller,
   Delete,
   InternalServerErrorException,
-  NotFoundException,
   Post,
   Res,
 } from '@nestjs/common';
@@ -16,7 +15,8 @@ import { AuthService } from './auth.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 import { Response } from 'express';
-import { LowercaseAddressPipe } from 'src/lowercase/lowercase.pipe';
+import { LowercaseAddressPipe } from 'src/pipes/lowercase/lowercase.pipe';
+import handlePrismaErrors from 'src/errors/handlePrismaErrors';
 
 @Controller('auth')
 export class AuthController {
@@ -31,19 +31,11 @@ export class AuthController {
       res.cookie('jwt', await this.authService.signUp(signUpDto), {
         httpOnly: true,
       });
+
       res.sendStatus(201);
     } catch (err: unknown) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError) {
-        switch (err.code) {
-          case 'P2002':
-            console.error(err);
-            throw new ConflictException(
-              'E-mail or public address already exists',
-            );
-          default:
-            break;
-        }
-      }
+      handlePrismaErrors(err);
+
       console.error(err);
       throw new InternalServerErrorException();
     }
@@ -58,14 +50,11 @@ export class AuthController {
 
       res.sendStatus(200);
     } catch (err: unknown) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError) {
-        switch (err.code) {
-          case 'P2025':
-            throw new NotFoundException('User not found');
-          default:
-            break;
-        }
-      }
+      handlePrismaErrors(err);
+
+      if (err instanceof InvalidTokenError)
+        throw new BadRequestException('Invalid token');
+
       console.error(err);
       throw new InternalServerErrorException();
     }
@@ -78,6 +67,7 @@ export class AuthController {
     } catch (err: unknown) {
       if (err instanceof InvalidTokenError)
         throw new BadRequestException('Invalid token');
+
       console.error(err);
       throw new InternalServerErrorException();
     }

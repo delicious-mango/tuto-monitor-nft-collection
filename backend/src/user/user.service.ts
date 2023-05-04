@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { Credentials } from 'src/credentials/credentials.interface';
+import { Credentials } from 'src/contracts/credentials/credentials.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 import { ResponseUserDto } from './dto/reponse-user.dto';
@@ -9,6 +9,7 @@ import { ResponseUserDto } from './dto/reponse-user.dto';
 @Injectable()
 export class UserService {
   // ready-to-use prisma select object to query users whithout returning their password
+  // TODO: Add middleware
   private readonly selectResponseUserDto: Prisma.UserSelect = {
     id: true,
     email: true,
@@ -21,6 +22,7 @@ export class UserService {
 
   async create(user: Prisma.UserCreateInput): Promise<ResponseUserDto> {
     user.password = await bcrypt.hash(user.password, 10);
+
     return this.prisma.user.create({
       data: user,
       select: this.selectResponseUserDto,
@@ -42,6 +44,7 @@ export class UserService {
         where: { id: unique },
         select: this.selectResponseUserDto,
       }) as Promise<ResponseUserDto>;
+
     return this.prisma.user.findFirstOrThrow({
       where: {
         OR: [{ email: unique }, { publicAddress: unique }],

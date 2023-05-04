@@ -2,19 +2,18 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RevokedToken } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { JwtPayload } from 'src/contracts/jwt-payload/jwt-payload.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { v4 as uuidv4 } from 'uuid';
 
-import { Credentials } from '../credentials/credentials.interface';
+import { Credentials } from '../contracts/credentials/credentials.interface';
 import { InvalidTokenError } from '../errors/invalid-token-error/invalid-token-error';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
-import { JwtPayload } from 'src/auth/jwt-payload/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
-  private readonly encoder: TextEncoder = new TextEncoder();
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
@@ -60,15 +59,4 @@ export class AuthService {
       },
     });
   }
-
-  // async verifyToken(token: string): Promise<JwtPayload> {
-  //   const payload = (await this.jwtService.verifyAsync(token)) as JwtPayload;
-
-  //   if (!payload || !payload.jti) throw new HttpException('Invalid token', 401);
-  //   const revokedToken = await this.prisma.revokedToken.findUnique({
-  //     where: { jti: payload.jti },
-  //   });
-  //   if (revokedToken) throw new HttpException('Invalid token', 401);
-  //   return payload;
-  // }
 }

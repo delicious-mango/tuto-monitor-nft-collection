@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { CreateItemDto } from './dto/create-item.dto';
-import { UpdateItemDto } from './dto/update-item.dto';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ItemService {
-  create(createItemDto: CreateItemDto) {
-    return 'This action adds a new item';
+  constructor(private prismaService: PrismaService) {}
+
+  async create(mintItemDto: Prisma.ItemCreateInput) {
+    await this.prismaService.item.create({ data: mintItemDto });
   }
 
   findAll() {
@@ -16,11 +18,14 @@ export class ItemService {
     return `This action returns a #${id} item`;
   }
 
-  update(id: number, updateItemDto: UpdateItemDto) {
-    return `This action updates a #${id} item`;
+  async update(id: string, updateItemDto: Prisma.ItemUpdateInput) {
+    await this.prismaService.item.update({
+      where: { id },
+      data: updateItemDto,
+    });
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} item`;
   }
 }

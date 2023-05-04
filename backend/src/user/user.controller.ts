@@ -4,15 +4,15 @@ import {
   Delete,
   Get,
   InternalServerErrorException,
-  NotFoundException,
   Param,
   Patch,
   UseGuards,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import handlePrismaErrors from 'src/errors/handlePrismaErrors';
 
+import { AuthGuard } from '../guards/auth/auth.guard';
 import { UserService } from './user.service';
-import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('user')
 export class UserController {
@@ -35,14 +35,8 @@ export class UserController {
     try {
       return this.userService.findByUnique(id);
     } catch (err: unknown) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError) {
-        switch (err.code) {
-          case 'P2025':
-            throw new NotFoundException('User not found');
-          default:
-            break;
-        }
-      }
+      handlePrismaErrors(err);
+
       console.error(err);
       throw new InternalServerErrorException();
     }
@@ -57,16 +51,10 @@ export class UserController {
     try {
       return this.userService.update(id, updateUserDto);
     } catch (err: unknown) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError) {
-        switch (err.code) {
-          case 'P2025':
-            throw new NotFoundException('User not found');
-          default:
-            break;
-        }
-        console.error(err);
-        throw new InternalServerErrorException();
-      }
+      handlePrismaErrors(err);
+
+      console.error(err);
+      throw new InternalServerErrorException();
     }
   }
 
@@ -76,14 +64,8 @@ export class UserController {
     try {
       return this.userService.remove(id);
     } catch (err: unknown) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError) {
-        switch (err.code) {
-          case 'P2025':
-            throw new NotFoundException('User not found');
-          default:
-            break;
-        }
-      }
+      handlePrismaErrors(err);
+
       console.error(err);
       throw new InternalServerErrorException();
     }
