@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
-export default async function handlePrismaErrors(err: unknown) {
+export default function handlePrismaErrors(err: unknown) {
   if (!(err instanceof Prisma.PrismaClientKnownRequestError)) return;
 
   switch (err.code) {

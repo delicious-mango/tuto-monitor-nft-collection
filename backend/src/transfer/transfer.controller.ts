@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   InternalServerErrorException,
@@ -18,6 +17,8 @@ import { UserService } from 'src/user/user.service';
 
 import { TransferService } from './transfer.service';
 import { StartonGuard } from 'src/guards/starton/starton.guard';
+import { AuthGuard } from 'src/guards/auth/auth.guard';
+import { TransferDto } from './dto/transfer.dto';
 
 const nullAddress = '0x0000000000000000000000000000000000000000';
 
@@ -38,15 +39,20 @@ export class TransferController {
       const { from, to, id }: TransferSingle = body.data.transferSingle;
       const transfer: Prisma.TransferCreateInput = {
         item: { connect: { tokenId: id.hex.toLowerCase() } },
-        to: { connect: { publicAddress: to.toLowerCase() } },
-        from: { connect: { publicAddress: from.toLowerCase() } },
+        from: from.toLowerCase(),
+        to: to.toLowerCase(),
+        toUser: { connect: { publicAddress: to.toLowerCase() } },
+        fromUser: { connect: { publicAddress: from.toLowerCase() } },
         txHash: body.data.transaction.hash.toLowerCase(),
         blockHash: body.data.receipt.blockHash.toLowerCase(),
         blockNumber: body.data.receipt.blockNumber,
       };
-      const user = await this.userService.findByUnique(to.toLowerCase());
 
-      console.log(transfer);
+      const user = await this.userService.findByUnique(to.toLowerCase());
+      if (!user) {
+        delete transfer.fromUser;
+        delete transfer.toUser;
+      }
 
       // mint
       if (from === nullAddress) {
@@ -66,6 +72,8 @@ export class TransferController {
 
       await this.transferService.create(transfer);
 
+      if (!user) return;
+
       await this.emailService.sendEmail(
         user.email,
         'NFT Transfer',
@@ -81,18 +89,28 @@ export class TransferController {
     }
   }
 
-  @Get()
-  findAll() {
-    return this.transferService.findAll();
+  @UseGuards(AuthGuard)
+  @Post()
+  async transfer(@Body() body: TransferDto) {
+    try {
+      const { from, to, id } = body;
+
+      this.transferService.transfer(from, to, id);
+    } catch (err: unknown) {
+      handlePrismaErrors(err);
+
+      console.error(err);
+      throw new InternalServerErrorException();
+    }
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transferService.findOne(+id);
+  @Get('/from/:address')
+  findByFrom(@Param('address') address: string) {
+    return this.transferService.findByFrom(address);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.transferService.remove(+id);
+  @Get('/to/:address')
+  findByTo(@Param('address') address: string) {
+    return this.transferService.findByTo(address);
   }
 }

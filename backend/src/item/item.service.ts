@@ -20,7 +20,7 @@ export class ItemService {
 
   async update(id: string, updateItemDto: Prisma.ItemUpdateInput) {
     await this.prismaService.item.update({
-      where: { id },
+      where: { tokenId: id },
       data: updateItemDto,
     });
   }

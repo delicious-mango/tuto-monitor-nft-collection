@@ -36,10 +36,12 @@ model Transfer {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   item        Item     @relation(fields: [itemId], references: [id])
   itemId      String   @db.ObjectId
-  from        User     @relation(name: "sentTransfers", fields: [fromId], references: [id])
-  fromId      String   @db.ObjectId
-  to          User     @relation(name: "receivedTransfers", fields: [toId], references: [id])
-  toId        String   @db.ObjectId
+  from        String
+  to          String
+  fromUser    User?    @relation(name: "sentTransfers", fields: [fromUserId], references: [id])
+  fromUserId  String?  @db.ObjectId
+  toUser      User?    @relation(name: "receivedTransfers", fields: [toUserId], references: [id])
+  toUserId    String?  @db.ObjectId
   blockNumber Int
   blockHash   String
   txHash      String

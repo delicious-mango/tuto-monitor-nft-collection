@@ -8,16 +8,6 @@ import { ResponseUserDto } from './dto/reponse-user.dto';
 
 @Injectable()
 export class UserService {
-  // ready-to-use prisma select object to query users whithout returning their password
-  // TODO: Add middleware
-  private readonly selectResponseUserDto: Prisma.UserSelect = {
-    id: true,
-    email: true,
-    password: false,
-    publicAddress: true,
-    createdAt: true,
-  };
-
   constructor(private prisma: PrismaService) {}
 
   async create(user: Prisma.UserCreateInput): Promise<ResponseUserDto> {
@@ -25,32 +15,27 @@ export class UserService {
 
     return this.prisma.user.create({
       data: user,
-      select: this.selectResponseUserDto,
-    }) as Promise<ResponseUserDto>;
+    });
   }
 
   async findAll(): Promise<ResponseUserDto[]> {
-    const users = await this.prisma.user.findMany({
-      select: this.selectResponseUserDto,
-    });
+    const users = await this.prisma.user.findMany({});
 
     return users as ResponseUserDto[];
   }
 
-  async findByUnique(unique: string): Promise<ResponseUserDto> {
+  async findByUnique(unique: string): Promise<ResponseUserDto | null> {
     // Can't search on a malformed objectID
     if (unique.length === 24)
-      return this.prisma.user.findUniqueOrThrow({
+      return this.prisma.user.findUnique({
         where: { id: unique },
-        select: this.selectResponseUserDto,
-      }) as Promise<ResponseUserDto>;
+      });
 
-    return this.prisma.user.findFirstOrThrow({
+    return this.prisma.user.findFirst({
       where: {
         OR: [{ email: unique }, { publicAddress: unique }],
       },
-      select: this.selectResponseUserDto,
-    }) as Promise<ResponseUserDto>;
+    });
   }
 
   async getHashedPassword(email: string): Promise<Credentials> {
@@ -67,14 +52,12 @@ export class UserService {
     return this.prisma.user.update({
       where: { id },
       data: updateUserData,
-      select: this.selectResponseUserDto,
-    }) as Promise<ResponseUserDto>;
+    });
   }
 
   async remove(id: string): Promise<ResponseUserDto> {
     return this.prisma.user.delete({
       where: { id },
-      select: this.selectResponseUserDto,
-    }) as Promise<ResponseUserDto>;
+    });
   }
 }

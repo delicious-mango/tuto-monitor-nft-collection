@@ -4,21 +4,26 @@ import {
   Delete,
   Get,
   InternalServerErrorException,
+  NotFoundException,
   Param,
   Patch,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import handlePrismaErrors from 'src/errors/handlePrismaErrors';
 
 import { AuthGuard } from '../guards/auth/auth.guard';
 import { UserService } from './user.service';
+import { RemovePasswordFromArrayInterceptor } from 'src/interceptors/remove-password-from-array/remove-password-from-array.interceptor';
+import { RemovePasswordInterceptor } from 'src/interceptors/remove-password/remove-password.interceptor';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @UseGuards(AuthGuard)
+  @UseInterceptors(RemovePasswordFromArrayInterceptor)
   @Get()
   async findAll() {
     try {
@@ -30,11 +35,15 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard)
+  @UseInterceptors(RemovePasswordInterceptor)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {
-      return this.userService.findByUnique(id);
+      const user = await this.userService.findByUnique(id);
+      if (!user) throw new NotFoundException();
     } catch (err: unknown) {
+      if (err instanceof NotFoundException) throw err;
+
       handlePrismaErrors(err);
 
       console.error(err);
@@ -43,6 +52,7 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard)
+  @UseInterceptors(RemovePasswordInterceptor)
   @Patch(':id')
   async update(
     @Param('id') id: string,
@@ -59,6 +69,7 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard)
+  @UseInterceptors(RemovePasswordInterceptor)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {

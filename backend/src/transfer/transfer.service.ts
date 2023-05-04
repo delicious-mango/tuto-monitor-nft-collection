@@ -1,6 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import axios from 'axios';
+import { PrismaService } from 'src/prisma/prisma.service';
+
+const network = 'polygon-mumbai';
+const cryptoquartzCollectionAddress =
+  '0x501D90CdBd220BeB9C590b918a377741eDC10Fd9';
+const signerWallet = '0x1bb9D826B25e1edBe5E9fFF1D557BfF7bd350Ee7';
+
+const contract = axios.create({
+  baseURL:
+    'https://api.starton.com/v3/smart-contract/' +
+    network +
+    '/' +
+    cryptoquartzCollectionAddress +
+    '/',
+  headers: {
+    'x-api-key': process.env.STARTON_API_KEY,
+  },
+});
 
 @Injectable()
 export class TransferService {
@@ -10,15 +28,29 @@ export class TransferService {
     await this.prismaService.transfer.create({ data: createTransferDto });
   }
 
-  findAll() {
-    return `This action returns all transfer`;
+  async transfer(from: string, to: string, id: string) {
+    try {
+      await contract.post('call', {
+        signerWallet,
+        functionName: 'safeTransferFrom',
+        params: [from, to, id, 1, '0x00'],
+      });
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} transfer`;
+  async findByFrom(from: string) {
+    return this.prismaService.transfer.findMany({
+      where: { from },
+      include: { fromUser: true, toUser: true },
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} transfer`;
+  async findByTo(to: string) {
+    return this.prismaService.transfer.findMany({
+      where: { to },
+      include: { fromUser: true, toUser: true },
+    });
   }
 }
