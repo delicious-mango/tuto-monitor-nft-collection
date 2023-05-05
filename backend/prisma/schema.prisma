@@ -15,7 +15,8 @@ model User {
   email             String     @unique
   password          String
   publicAddress     String     @unique
-  items             Item[]
+  items             Item[]     @relation(fields: [itemsIds], references: [id])
+  itemsIds          String[]   @db.ObjectId
   createdAt         DateTime   @default(now())
   sentTransfers     Transfer[] @relation(name: "sentTransfers")
   receivedTransfers Transfer[] @relation(name: "receivedTransfers")
@@ -25,8 +26,9 @@ model Item {
   id              String     @id @default(auto()) @map("_id") @db.ObjectId
   contractAddress String
   tokenId         String     @unique
-  owner           User       @relation(fields: [ownerId], references: [id])
-  ownerId         String     @db.ObjectId
+  ownerAddress    String
+  owner           User[]     @relation(fields: [ownerId], references: [id])
+  ownerId         String[]   @db.ObjectId
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   transfers       Transfer[]

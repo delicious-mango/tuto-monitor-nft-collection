@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 const network = 'polygon-mumbai';
@@ -29,15 +29,11 @@ export class TransferService {
   }
 
   async transfer(from: string, to: string, id: string) {
-    try {
-      await contract.post('call', {
-        signerWallet,
-        functionName: 'safeTransferFrom',
-        params: [from, to, id, 1, '0x00'],
-      });
-    } catch (err) {
-      console.error(err);
-    }
+    await contract.post('call', {
+      signerWallet,
+      functionName: 'safeTransferFrom',
+      params: [from, to, id, 1, '0x00'],
+    });
   }
 
   async findByFrom(from: string) {

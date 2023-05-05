@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpException,
   InternalServerErrorException,
   Param,
   Post,
@@ -12,13 +13,14 @@ import { Prisma } from '@prisma/client';
 import { TransferSingle } from 'src/contracts/transfer-single/transfer-single.interface';
 import { EmailService } from 'src/email/email.service';
 import handlePrismaErrors from 'src/errors/handlePrismaErrors';
+import { AuthGuard } from 'src/guards/auth/auth.guard';
+import { StartonGuard } from 'src/guards/starton/starton.guard';
 import { ItemService } from 'src/item/item.service';
 import { UserService } from 'src/user/user.service';
 
-import { TransferService } from './transfer.service';
-import { StartonGuard } from 'src/guards/starton/starton.guard';
-import { AuthGuard } from 'src/guards/auth/auth.guard';
 import { TransferDto } from './dto/transfer.dto';
+import { TransferService } from './transfer.service';
+import { AxiosError } from 'axios';
 
 const nullAddress = '0x0000000000000000000000000000000000000000';
 
@@ -48,11 +50,10 @@ export class TransferController {
         blockNumber: body.data.receipt.blockNumber,
       };
 
-      const user = await this.userService.findByUnique(to.toLowerCase());
-      if (!user) {
-        delete transfer.fromUser;
-        delete transfer.toUser;
-      }
+      const toUser = await this.userService.findByUnique(to.toLowerCase());
+      if (!toUser) delete transfer.toUser;
+      const fromUser = await this.userService.findByUnique(from.toLowerCase());
+      if (!fromUser) delete transfer.fromUser;
 
       // mint
       if (from === nullAddress) {
@@ -60,31 +61,46 @@ export class TransferController {
           contractAddress:
             body.data.transferSingle.contractAddress.toLowerCase(),
           tokenId: id.hex.toLowerCase(),
-          owner: { connect: { publicAddress: to.toLowerCase() } },
+          ownerAddress: to.toLowerCase(),
+          owner: {
+            connect: toUser ? { publicAddress: to.toLowerCase() } : undefined,
+          },
         };
 
         await this.itemService.create(item);
       } else {
         await this.itemService.update(id.hex, {
-          owner: { connect: { publicAddress: to.toLowerCase() } },
+          ownerAddress: to.toLowerCase(),
+          owner: {
+            disconnect: fromUser
+              ? { publicAddress: from.toLowerCase() }
+              : undefined,
+            connect: toUser ? { publicAddress: to.toLowerCase() } : undefined,
+          },
         });
       }
 
       await this.transferService.create(transfer);
 
-      if (!user) return;
+      if (!toUser) return;
 
       await this.emailService.sendEmail(
-        user.email,
+        toUser.email,
         'NFT Transfer',
-        JSON.stringify(body),
+        'The address ' +
+          from +
+          ' sent the NFT #' +
+          id.hex +
+          ' to your address ' +
+          to +
+          '.',
       );
 
       return;
     } catch (err: unknown) {
+      console.error(err);
       handlePrismaErrors(err);
 
-      console.error(err);
       throw new InternalServerErrorException();
     }
   }
@@ -95,12 +111,15 @@ export class TransferController {
     try {
       const { from, to, id } = body;
 
-      this.transferService.transfer(from, to, id);
+      await this.transferService.transfer(from, to, id);
     } catch (err: unknown) {
-      handlePrismaErrors(err);
+      if (err instanceof AxiosError)
+        throw new HttpException(
+          err.response?.data.message,
+          Number(err.response?.status),
+        );
 
-      console.error(err);
-      throw new InternalServerErrorException();
+      handlePrismaErrors(err);
     }
   }
 
