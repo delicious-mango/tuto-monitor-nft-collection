@@ -23,15 +23,25 @@ model User {
 }
 
 model Item {
-  id              String     @id @default(auto()) @map("_id") @db.ObjectId
-  contractAddress String
-  tokenId         String     @unique
-  ownerAddress    String
-  owner           User[]     @relation(fields: [ownerId], references: [id])
-  ownerId         String[]   @db.ObjectId
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  transfers       Transfer[]
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  tokenId      String      @unique
+  ownerAddress String
+  owner        User[]      @relation(fields: [ownerId], references: [id])
+  ownerId      String[]    @db.ObjectId
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  transfers    Transfer[]
+  collection   Collection? @relation(fields: [collectionId], references: [id])
+  collectionId String?     @db.ObjectId
+}
+
+model Collection {
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  name            String @unique
+  description     String
+  items           Item[]
+  nextTokenId     Int
+  contractAddress String @unique
 }
 
 model Transfer {

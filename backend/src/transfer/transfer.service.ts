@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 const network = 'polygon-mumbai';
@@ -46,6 +46,13 @@ export class TransferService {
   async findByTo(to: string) {
     return this.prismaService.transfer.findMany({
       where: { to },
+      include: { fromUser: true, toUser: true },
+    });
+  }
+
+  async findByTokenId(tokenId: string) {
+    return this.prismaService.transfer.findMany({
+      where: { item: { tokenId } },
       include: { fromUser: true, toUser: true },
     });
   }

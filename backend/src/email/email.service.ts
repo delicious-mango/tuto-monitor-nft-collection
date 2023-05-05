@@ -13,7 +13,7 @@ export class EmailService {
       },
     },
     {
-      from: `NestJS Template <${process.env.EMAIL_USER}>`,
+      from: `Cryptomancy <${process.env.EMAIL_USER}>`,
     },
   );
 

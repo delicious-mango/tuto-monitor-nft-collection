@@ -10,6 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { AxiosError } from 'axios';
+import { nullAddress } from 'src/contracts/constants';
 import { TransferSingle } from 'src/contracts/transfer-single/transfer-single.interface';
 import { EmailService } from 'src/email/email.service';
 import handlePrismaErrors from 'src/errors/handlePrismaErrors';
@@ -20,9 +22,6 @@ import { UserService } from 'src/user/user.service';
 
 import { TransferDto } from './dto/transfer.dto';
 import { TransferService } from './transfer.service';
-import { AxiosError } from 'axios';
-
-const nullAddress = '0x0000000000000000000000000000000000000000';
 
 @Controller('transfer')
 export class TransferController {
@@ -58,12 +57,16 @@ export class TransferController {
       // mint
       if (from === nullAddress) {
         const item: Prisma.ItemCreateInput = {
-          contractAddress:
-            body.data.transferSingle.contractAddress.toLowerCase(),
           tokenId: id.hex.toLowerCase(),
           ownerAddress: to.toLowerCase(),
           owner: {
             connect: toUser ? { publicAddress: to.toLowerCase() } : undefined,
+          },
+          collection: {
+            connect: {
+              contractAddress:
+                body.data.transferSingle.contractAddress.toLowerCase(),
+            },
           },
         };
 
@@ -131,5 +134,10 @@ export class TransferController {
   @Get('/to/:address')
   findByTo(@Param('address') address: string) {
     return this.transferService.findByTo(address);
+  }
+
+  @Get('/item/:tokenId')
+  findByItem(@Param('tokenId') tokenId: string) {
+    return this.transferService.findByTokenId(tokenId);
   }
 }

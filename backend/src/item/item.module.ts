@@ -4,9 +4,10 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 
 import { ItemController } from './item.controller';
 import { ItemService } from './item.service';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, UserModule],
   controllers: [ItemController],
   providers: [ItemService],
   exports: [ItemService],
