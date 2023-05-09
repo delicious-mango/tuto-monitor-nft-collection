@@ -25,12 +25,14 @@ import { UserService } from 'src/user/user.service';
 
 import { TransferDto } from './dto/transfer.dto';
 import { TransferService } from './transfer.service';
+import { ApiCookieAuth, ApiTags } from '@nestjs/swagger';
 
 /*
 |--------------------------------------------------------------------------
 | NFT-TRANSFERS-RELATED CONTROLLER
 |--------------------------------------------------------------------------
 */
+@ApiTags('Transfers')
 @Controller('transfer')
 export class TransferController {
   constructor(
@@ -45,6 +47,7 @@ export class TransferController {
   | WEBHOOK LISTENING TO TRANSFER EVENTS FROM STARTON
   |--------------------------------------------------------------------------
   */
+  @ApiTags('Webhooks')
   @UseGuards(StartonGuard)
   @Post('webhook')
   @HttpCode(200)
@@ -132,6 +135,7 @@ export class TransferController {
   | TRANSFER AN NFT
   |--------------------------------------------------------------------------
   */
+  @ApiCookieAuth()
   @UseGuards(AuthGuard)
   @Post()
   async transfer(@Body() body: TransferDto): Promise<void> {

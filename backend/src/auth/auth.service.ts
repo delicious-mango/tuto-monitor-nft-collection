@@ -8,13 +8,11 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RevokedToken } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { JwtPayload } from 'src/contracts/jwt-payload/jwt-payload.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Credentials } from '../contracts/credentials/credentials.interface';
-import { InvalidTokenError } from '../errors/invalid-token-error/invalid-token-error';
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 
@@ -65,12 +63,9 @@ export class AuthService {
 
   // sign-out / revoke token method
   //--------------------------------------------------------------------------
-  async revokeToken(token: string): Promise<RevokedToken> {
-    const payload = (await this.jwtService.verify(token)) as JwtPayload;
-
-    if (!payload || !payload.jti) throw new InvalidTokenError();
+  async revokeToken(jti: string): Promise<RevokedToken> {
     return this.prisma.revokedToken.create({
-      data: { jti: payload.jti },
+      data: { jti },
     });
   }
 }

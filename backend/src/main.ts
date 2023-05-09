@@ -4,11 +4,12 @@
 | Author : Alexandre Schaffner (alexandre.s@starton.com)
 */
 
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +18,15 @@ import { ValidationPipe } from '@nestjs/common';
 */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const config = new DocumentBuilder()
+    .setTitle('Monitor & Notify NFT transfers API')
+    .setDescription('The Monitor & Notify NFT transfers API description')
+    .setVersion('1.0')
+    .addTag('Cryptomancy')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('doc', app, document);
 
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe());

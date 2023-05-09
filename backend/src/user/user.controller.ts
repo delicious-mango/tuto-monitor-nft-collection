@@ -23,12 +23,15 @@ import { RemovePasswordInterceptor } from 'src/interceptors/remove-password/remo
 import { AuthGuard } from '../guards/auth/auth.guard';
 import { ResponseUserDto } from './dto/reponse-user.dto';
 import { UserService } from './user.service';
+import { ApiCookieAuth, ApiTags } from '@nestjs/swagger';
 
 /*
 |--------------------------------------------------------------------------
 | USER CONTROLLER
 |--------------------------------------------------------------------------
 */
+@ApiTags('User')
+@ApiCookieAuth()
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

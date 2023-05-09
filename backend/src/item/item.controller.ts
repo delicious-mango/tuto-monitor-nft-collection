@@ -14,7 +14,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { Item, Transfer, User } from '@prisma/client';
+import { Item } from '@prisma/client';
 import { Request } from 'express';
 import { cryptoquartzCollectionAddress } from 'src/contracts/constants';
 import { handleErrors } from 'src/errors/handleErrors';
@@ -23,12 +23,14 @@ import { UserService } from 'src/user/user.service';
 
 import { AuthGuard } from '../guards/auth/auth.guard';
 import { ItemService } from './item.service';
+import { ApiCookieAuth, ApiTags } from '@nestjs/swagger';
 
 /*
 |--------------------------------------------------------------------------
 | ITEM CONTROLLER
 |--------------------------------------------------------------------------
 */
+@ApiTags('Items')
 @Controller('item')
 export class ItemController {
   constructor(
@@ -42,6 +44,7 @@ export class ItemController {
   | MINTING ROUTE
   |--------------------------------------------------------------------------
   */
+  @ApiCookieAuth()
   @UseGuards(AuthGuard)
   @Post('mint')
   async mint(@Req() req: Request): Promise<void> {
@@ -69,8 +72,9 @@ export class ItemController {
   | BURNING ROUTE
   |--------------------------------------------------------------------------
   */
+  @ApiCookieAuth()
   @UseGuards(AuthGuard)
-  @Delete(':tokenId')
+  @Delete('burn/:tokenId')
   async burn(@Req() req: Request, @Param('id') tokenId: string): Promise<void> {
     try {
       const user = await this.userService.findByUnique(req.user.sub);
@@ -90,6 +94,7 @@ export class ItemController {
 
   // Get user's NFTs
   //--------------------------------------------------------------------------
+  @ApiCookieAuth()
   @UseGuards(AuthGuard)
   @Get('mine')
   async getMine(@Req() req: Request): Promise<{ items: Item[] } | undefined> {
@@ -118,7 +123,6 @@ export class ItemController {
 
   // Get NFT by tokenId
   //--------------------------------------------------------------------------
-  @UseGuards(AuthGuard)
   @Get(':tokenId')
   async findOne(@Param('tokenId') tokenId: string) {
     try {
