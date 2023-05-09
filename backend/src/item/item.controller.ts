@@ -1,3 +1,9 @@
+/*
+| Developed by Starton
+| Filename : item.controller.ts
+| Author : Alexandre Schaffner (alexandre.s@starton.com)
+*/
+
 import {
   Controller,
   Delete,
@@ -20,6 +26,11 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { cryptoquartzCollectionAddress } from 'src/contracts/constants';
 import { AxiosError } from 'axios';
 
+/*
+|--------------------------------------------------------------------------
+| ITEM CONTROLLER
+|--------------------------------------------------------------------------
+*/
 @Controller('item')
 export class ItemController {
   constructor(
@@ -28,10 +39,17 @@ export class ItemController {
     private readonly userService: UserService,
   ) {}
 
+  /*
+  |--------------------------------------------------------------------------
+  | MINTING ROUTE
+  |--------------------------------------------------------------------------
+  */
   @UseGuards(AuthGuard)
   @Post('mint')
   async mint(@Req() req: Request) {
     try {
+      // Check if user and collection exists
+      //--------------------------------------------------------------------------
       const user = await this.userService.findByUnique(req.user.sub);
       if (user === null) throw new NotFoundException();
 
@@ -40,10 +58,14 @@ export class ItemController {
       });
       if (collection === null) throw new NotFoundException();
 
+      // Call to the minting service
+      //--------------------------------------------------------------------------
       await this.itemService.mint(user.publicAddress, collection.nextTokenId);
     } catch (err: unknown) {
       if (err instanceof NotFoundException) throw err;
 
+      // If the call to Starton API fails, throw the HttpException
+      //--------------------------------------------------------------------------
       if (err instanceof AxiosError) {
         throw new HttpException(
           err.response?.data,
@@ -55,11 +77,11 @@ export class ItemController {
     }
   }
 
-  /**
-   * Burn an NFT by id
-   * @param id
-   * @returns
-   */
+  /*
+  |--------------------------------------------------------------------------
+  | BURNING ROUTE
+  |--------------------------------------------------------------------------
+  */
   @UseGuards(AuthGuard)
   @Delete(':tokenId')
   async burn(@Req() req: Request, @Param('id') tokenId: string) {
@@ -69,10 +91,14 @@ export class ItemController {
     return this.itemService.burn(user.publicAddress, tokenId);
   }
 
-  /**
-   * Return my NFTs
-   * @returns
-   */
+  /*
+  |--------------------------------------------------------------------------
+  | GET ROUTES
+  |--------------------------------------------------------------------------
+  */
+
+  // Get user's NFTs
+  //--------------------------------------------------------------------------
   @UseGuards(AuthGuard)
   @Get('mine')
   async getMine(@Req() req: Request) {
@@ -82,6 +108,8 @@ export class ItemController {
     return this.itemService.findByOwner(user.publicAddress);
   }
 
+  // Get NFTs by owner's address
+  //--------------------------------------------------------------------------
   @Get(':address')
   async getByAddress(@Param('address') address: string) {
     try {
@@ -94,11 +122,8 @@ export class ItemController {
     }
   }
 
-  /**
-   * Get one NFT by tokenId
-   * @param tokenId
-   * @returns
-   */
+  // Get NFT by tokenId
+  //--------------------------------------------------------------------------
   @UseGuards(AuthGuard)
   @Get(':tokenId')
   async findOne(@Param('tokenId') tokenId: string) {

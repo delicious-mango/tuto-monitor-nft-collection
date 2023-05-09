@@ -1,3 +1,9 @@
+/*
+| Developed by Starton
+| Filename : transfer.controller.ts
+| Author : Alexandre Schaffner (alexandre.s@starton.com)
+*/
+
 import {
   Body,
   Controller,
@@ -23,6 +29,11 @@ import { UserService } from 'src/user/user.service';
 import { TransferDto } from './dto/transfer.dto';
 import { TransferService } from './transfer.service';
 
+/*
+|--------------------------------------------------------------------------
+| NFT-TRANSFERS-RELATED CONTROLLER
+|--------------------------------------------------------------------------
+*/
 @Controller('transfer')
 export class TransferController {
   constructor(
@@ -32,6 +43,11 @@ export class TransferController {
     private readonly emailService: EmailService,
   ) {}
 
+  /*
+  |--------------------------------------------------------------------------
+  | WEBHOOK LISTENING TO TRANSFER EVENTS FROM STARTON
+  |--------------------------------------------------------------------------
+  */
   @UseGuards(StartonGuard)
   @Post('webhook')
   @HttpCode(200)
@@ -49,12 +65,15 @@ export class TransferController {
         blockNumber: body.data.receipt.blockNumber,
       };
 
+      // Check if user exists, if not, don't connect records
+      //--------------------------------------------------------------------------
       const toUser = await this.userService.findByUnique(to.toLowerCase());
       if (!toUser) delete transfer.toUser;
       const fromUser = await this.userService.findByUnique(from.toLowerCase());
       if (!fromUser) delete transfer.fromUser;
 
-      // mint
+      // In case of minting, create an item record
+      //--------------------------------------------------------------------------
       if (from === nullAddress) {
         const item: Prisma.ItemCreateInput = {
           tokenId: id.hex.toLowerCase(),
@@ -72,6 +91,8 @@ export class TransferController {
 
         await this.itemService.create(item);
       } else {
+        // Otherwise, update the item's owner
+        //--------------------------------------------------------------------------
         await this.itemService.update(id.hex, {
           ownerAddress: to.toLowerCase(),
           owner: {
@@ -83,8 +104,12 @@ export class TransferController {
         });
       }
 
+      // Create the transfer record
+      //--------------------------------------------------------------------------
       await this.transferService.create(transfer);
 
+      // If the recipient is a user, send an email
+      //--------------------------------------------------------------------------
       if (!toUser) return;
 
       await this.emailService.sendEmail(
@@ -108,6 +133,11 @@ export class TransferController {
     }
   }
 
+  /*
+  |--------------------------------------------------------------------------
+  | TRANSFER AN NFT
+  |--------------------------------------------------------------------------
+  */
   @UseGuards(AuthGuard)
   @Post()
   async transfer(@Body() body: TransferDto) {
@@ -126,16 +156,28 @@ export class TransferController {
     }
   }
 
+  /*
+  |--------------------------------------------------------------------------
+  | GET TRANSFERS
+  |--------------------------------------------------------------------------
+  */
+
+  // By sender
+  //--------------------------------------------------------------------------
   @Get('/from/:address')
   findByFrom(@Param('address') address: string) {
     return this.transferService.findByFrom(address);
   }
 
+  // By recipient
+  //--------------------------------------------------------------------------
   @Get('/to/:address')
   findByTo(@Param('address') address: string) {
     return this.transferService.findByTo(address);
   }
 
+  // By item
+  //--------------------------------------------------------------------------
   @Get('/item/:tokenId')
   findByItem(@Param('tokenId') tokenId: string) {
     return this.transferService.findByTokenId(tokenId);

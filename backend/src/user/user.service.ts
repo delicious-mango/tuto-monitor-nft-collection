@@ -1,3 +1,9 @@
+/*
+| Developed by Starton
+| Filename : user.service.ts
+| Author : Alexandre Schaffner (alexandre.s@starton.com)
+*/
+
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -6,10 +12,20 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 import { ResponseUserDto } from './dto/reponse-user.dto';
 
+/*
+|--------------------------------------------------------------------------
+| USER SERVICE
+|--------------------------------------------------------------------------
+*/
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  /*
+  |--------------------------------------------------------------------------
+  | CRUD METHODS
+  |--------------------------------------------------------------------------
+  */
   async create(user: Prisma.UserCreateInput): Promise<ResponseUserDto> {
     user.password = await bcrypt.hash(user.password, 10);
 
@@ -38,13 +54,6 @@ export class UserService {
     });
   }
 
-  async getHashedPassword(email: string): Promise<Credentials> {
-    return await this.prisma.user.findUniqueOrThrow({
-      where: { email },
-      select: { id: true, password: true },
-    });
-  }
-
   async update(
     id: string,
     updateUserData: Prisma.UserUpdateInput,
@@ -58,6 +67,18 @@ export class UserService {
   async remove(id: string): Promise<ResponseUserDto> {
     return this.prisma.user.delete({
       where: { id },
+    });
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | RETRIEVE STORED HASHED PASSWORD
+  |--------------------------------------------------------------------------
+  */
+  async getHashedPassword(email: string): Promise<Credentials> {
+    return await this.prisma.user.findUniqueOrThrow({
+      where: { email },
+      select: { id: true, password: true },
     });
   }
 }

@@ -61,8 +61,6 @@ model Transfer {
 }
 
 model RevokedToken {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  jti       String    @unique
-  expiresAt DateTime?
-  createdAt DateTime  @default(now())
+  id  String @id @default(auto()) @map("_id") @db.ObjectId
+  jti String @unique
 }

@@ -1,3 +1,9 @@
+/*
+| Developed by Starton
+| Filename : auth.service.ts
+| Author : Alexandre Schaffner (alexandre.s@starton.com)
+*/
+
 import { HttpException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RevokedToken } from '@prisma/client';
@@ -12,6 +18,11 @@ import { InvalidTokenError } from '../errors/invalid-token-error/invalid-token-e
 import { SignInDto } from './dto/sign-in.dto';
 import { SignUpDto } from './dto/sign-up.dto';
 
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATION SERVICE
+|--------------------------------------------------------------------------
+*/
 @Injectable()
 export class AuthService {
   constructor(
@@ -20,6 +31,8 @@ export class AuthService {
     private readonly userService: UserService,
   ) {}
 
+  // sign-up method
+  //--------------------------------------------------------------------------
   async signUp(signUpDto: SignUpDto): Promise<string> {
     const user = await this.userService.create(signUpDto);
 
@@ -32,6 +45,8 @@ export class AuthService {
     );
   }
 
+  // sign-in method
+  //--------------------------------------------------------------------------
   async signIn(signInDto: SignInDto): Promise<string> {
     const credentials: Credentials = await this.userService.getHashedPassword(
       signInDto.email,
@@ -48,15 +63,14 @@ export class AuthService {
     );
   }
 
+  // sign-out / revoke token method
+  //--------------------------------------------------------------------------
   async revokeToken(token: string): Promise<RevokedToken> {
     const payload = (await this.jwtService.verify(token)) as JwtPayload;
 
     if (!payload || !payload.jti) throw new InvalidTokenError();
     return this.prisma.revokedToken.create({
-      data: {
-        jti: payload.jti,
-        expiresAt: payload.exp ? new Date(payload.exp * 1000) : undefined,
-      },
+      data: { jti: payload.jti },
     });
   }
 }

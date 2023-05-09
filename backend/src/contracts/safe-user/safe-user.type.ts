@@ -1,23 +1,14 @@
 /*
 | Developed by Starton
-| Filename : transfer.dto.ts
+| Filename : safe-user.type.ts
 | Author : Alexandre Schaffner (alexandre.s@starton.com)
 */
 
-import { IsEthereumAddress, IsString } from 'class-validator';
+import { User } from '@prisma/client';
 
 /*
 |--------------------------------------------------------------------------
-| NFT TRANSFER DTO
+| USER WITHOUT PASSWORD TYPE
 |--------------------------------------------------------------------------
 */
-export class TransferDto {
-  @IsEthereumAddress()
-  from: string;
-
-  @IsEthereumAddress()
-  to: string;
-
-  @IsString()
-  id: string;
-}
+export type SafeUser = Omit<User, 'password'>;

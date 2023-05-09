@@ -1,3 +1,9 @@
+/*
+| Developed by Starton
+| Filename : user.controller.ts
+| Author : Alexandre Schaffner (alexandre.s@starton.com)
+*/
+
 import {
   Body,
   Controller,
@@ -18,10 +24,17 @@ import { UserService } from './user.service';
 import { RemovePasswordFromArrayInterceptor } from 'src/interceptors/remove-password-from-array/remove-password-from-array.interceptor';
 import { RemovePasswordInterceptor } from 'src/interceptors/remove-password/remove-password.interceptor';
 
+/*
+|--------------------------------------------------------------------------
+| USER CONTROLLER
+|--------------------------------------------------------------------------
+*/
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  // CRUD routes for user
+  //--------------------------------------------------------------------------
   @UseGuards(AuthGuard)
   @UseInterceptors(RemovePasswordFromArrayInterceptor)
   @Get()

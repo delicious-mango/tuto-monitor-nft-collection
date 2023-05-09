@@ -1,33 +1,32 @@
+/*
+| Developed by Starton
+| Filename : transfer.service.ts
+| Author : Alexandre Schaffner (alexandre.s@starton.com)
+*/
+
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import axios from 'axios';
+import { contract } from 'src/axios/cryptoquartz-contract.axios-instance';
+import { signerWallet } from 'src/contracts/constants';
 import { PrismaService } from 'src/prisma/prisma.service';
 
-const network = 'polygon-mumbai';
-const cryptoquartzCollectionAddress =
-  '0x501D90CdBd220BeB9C590b918a377741eDC10Fd9';
-const signerWallet = '0x1bb9D826B25e1edBe5E9fFF1D557BfF7bd350Ee7';
-
-const contract = axios.create({
-  baseURL:
-    'https://api.starton.com/v3/smart-contract/' +
-    network +
-    '/' +
-    cryptoquartzCollectionAddress +
-    '/',
-  headers: {
-    'x-api-key': process.env.STARTON_API_KEY,
-  },
-});
-
+/*
+|--------------------------------------------------------------------------
+| Transfer Service
+|--------------------------------------------------------------------------
+*/
 @Injectable()
 export class TransferService {
   constructor(private readonly prismaService: PrismaService) {}
 
+  // Create a new transfer record in database
+  //--------------------------------------------------------------------------
   async create(createTransferDto: Prisma.TransferCreateInput) {
     await this.prismaService.transfer.create({ data: createTransferDto });
   }
 
+  // Transfer NFT from one user to another using Starton API
+  //--------------------------------------------------------------------------
   async transfer(from: string, to: string, id: string) {
     await contract.post('call', {
       signerWallet,
@@ -36,6 +35,14 @@ export class TransferService {
     });
   }
 
+  /*
+  |--------------------------------------------------------------------------
+  | FIND TRANSFERS
+  |--------------------------------------------------------------------------
+  */
+
+  // By sender
+  //--------------------------------------------------------------------------
   async findByFrom(from: string) {
     return this.prismaService.transfer.findMany({
       where: { from },
@@ -43,6 +50,8 @@ export class TransferService {
     });
   }
 
+  // By recipient
+  //--------------------------------------------------------------------------
   async findByTo(to: string) {
     return this.prismaService.transfer.findMany({
       where: { to },
@@ -50,6 +59,8 @@ export class TransferService {
     });
   }
 
+  // By NFT tokenId
+  //--------------------------------------------------------------------------
   async findByTokenId(tokenId: string) {
     return this.prismaService.transfer.findMany({
       where: { item: { tokenId } },

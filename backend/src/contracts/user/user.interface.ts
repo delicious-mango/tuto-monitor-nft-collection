@@ -1,20 +1,19 @@
 /*
 | Developed by Starton
-| Filename : reponse-user.dto.ts
+| Filename : user.interface.ts
 | Author : Alexandre Schaffner (alexandre.s@starton.com)
 */
 
 /*
 |--------------------------------------------------------------------------
-| USER DTO - RESPONSE
+| USER INTERFACE
 |--------------------------------------------------------------------------
 */
-
-// Basic user's infos without password
-//--------------------------------------------------------------------------
-export class ResponseUserDto {
+export interface User {
   id: string;
   email: string;
+  password?: string;
   publicAddress: string;
+  itemsIds: string[];
   createdAt: Date;
 }
