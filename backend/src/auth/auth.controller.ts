@@ -22,14 +22,14 @@ import { SignUpDto } from './dto/sign-up.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // sign-up route
-  //--------------------------------------------------------------------------
   @Post('sign-up')
   async signUp(
     @Body(new LowercaseAddressPipe()) signUpDto: SignUpDto,
     @Res() res: Response,
   ) {
     try {
+      // We set the JWT in a cookie when sign up / sign in
+      //--------------------------------------------------------------------------
       res.cookie('jwt', await this.authService.signUp(signUpDto), {
         httpOnly: true,
       });
@@ -40,8 +40,6 @@ export class AuthController {
     }
   }
 
-  // sign-in route
-  //--------------------------------------------------------------------------
   @Post('sign-in')
   async signIn(@Body() signInDto: SignInDto, @Res() res: Response) {
     try {
