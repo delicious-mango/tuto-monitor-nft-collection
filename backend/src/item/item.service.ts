@@ -11,7 +11,6 @@ import {
   cryptoquartzCollectionAddress,
   signerWallet,
 } from 'src/contracts/constants';
-import handlePrismaErrors from 'src/errors/handlePrismaErrors';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 /*
@@ -29,29 +28,22 @@ export class ItemService {
   |--------------------------------------------------------------------------
   */
   async mint(ownerAddress: string, tokenId: number) {
-    try {
-      // Starton API call to mint NFT
-      //--------------------------------------------------------------------------
-      const response = await contract.post('call', {
-        signerWallet,
-        functionName: 'mint',
-        params: [ownerAddress, tokenId, 1, 0x00],
-      });
+    // Starton API call to mint NFT
+    //--------------------------------------------------------------------------
+    const response = await contract.post('call', {
+      signerWallet,
+      functionName: 'mint',
+      params: [ownerAddress, tokenId, 1, 0x00],
+    });
 
-      // Increment nextTokenId in database
-      //--------------------------------------------------------------------------
-      await this.prismaService.collection.update({
-        where: { contractAddress: cryptoquartzCollectionAddress },
-        data: { nextTokenId: { increment: 1 } },
-      });
+    // Increment nextTokenId in database
+    //--------------------------------------------------------------------------
+    await this.prismaService.collection.update({
+      where: { contractAddress: cryptoquartzCollectionAddress },
+      data: { nextTokenId: { increment: 1 } },
+    });
 
-      return response.data;
-    } catch (err: unknown) {
-      handlePrismaErrors(err);
-
-      console.error(err);
-      throw err;
-    }
+    return response.data;
   }
 
   /*
@@ -75,7 +67,7 @@ export class ItemService {
   |--------------------------------------------------------------------------
   */
   async create(createItemDto: Prisma.ItemCreateInput) {
-    return this.prismaService.item.create({ data: createItemDto });
+    return await this.prismaService.item.create({ data: createItemDto });
   }
 
   /*
@@ -87,13 +79,15 @@ export class ItemService {
   // Get items by owner address
   //--------------------------------------------------------------------------
   async findByOwner(ownerAddress: string) {
-    return this.prismaService.item.findMany({ where: { ownerAddress } });
+    return await this.prismaService.item.findMany({
+      where: { ownerAddress },
+    });
   }
 
   // Get item by tokenId
   //--------------------------------------------------------------------------
   async findByTokenId(tokenId: string) {
-    return this.prismaService.item.findUnique({
+    return await this.prismaService.item.findUnique({
       where: { tokenId },
       include: { owner: true, transfers: true },
     });
@@ -105,7 +99,7 @@ export class ItemService {
   |--------------------------------------------------------------------------
   */
   async update(tokenId: string, updateItemDto: Prisma.ItemUpdateInput) {
-    return this.prismaService.item.update({
+    return await this.prismaService.item.update({
       where: { tokenId },
       data: updateItemDto,
     });

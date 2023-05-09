@@ -7,24 +7,22 @@
 import {
   Controller,
   Delete,
-  Post,
   Get,
-  InternalServerErrorException,
   NotFoundException,
   Param,
+  Post,
   Req,
   UseGuards,
-  HttpException,
 } from '@nestjs/common';
+import { Item, Transfer, User } from '@prisma/client';
 import { Request } from 'express';
-import handlePrismaErrors from 'src/errors/handlePrismaErrors';
+import { cryptoquartzCollectionAddress } from 'src/contracts/constants';
+import { handleErrors } from 'src/errors/handleErrors';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UserService } from 'src/user/user.service';
 
 import { AuthGuard } from '../guards/auth/auth.guard';
 import { ItemService } from './item.service';
-import { UserService } from 'src/user/user.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { cryptoquartzCollectionAddress } from 'src/contracts/constants';
-import { AxiosError } from 'axios';
 
 /*
 |--------------------------------------------------------------------------
@@ -46,7 +44,7 @@ export class ItemController {
   */
   @UseGuards(AuthGuard)
   @Post('mint')
-  async mint(@Req() req: Request) {
+  async mint(@Req() req: Request): Promise<void> {
     try {
       // Check if user and collection exists
       //--------------------------------------------------------------------------
@@ -62,18 +60,7 @@ export class ItemController {
       //--------------------------------------------------------------------------
       await this.itemService.mint(user.publicAddress, collection.nextTokenId);
     } catch (err: unknown) {
-      if (err instanceof NotFoundException) throw err;
-
-      // If the call to Starton API fails, throw the HttpException
-      //--------------------------------------------------------------------------
-      if (err instanceof AxiosError) {
-        throw new HttpException(
-          err.response?.data,
-          Number(err.response?.status),
-        );
-      }
-
-      handlePrismaErrors(err);
+      handleErrors(err);
     }
   }
 
@@ -84,11 +71,15 @@ export class ItemController {
   */
   @UseGuards(AuthGuard)
   @Delete(':tokenId')
-  async burn(@Req() req: Request, @Param('id') tokenId: string) {
-    const user = await this.userService.findByUnique(req.user.sub);
-    if (!user) throw new NotFoundException();
+  async burn(@Req() req: Request, @Param('id') tokenId: string): Promise<void> {
+    try {
+      const user = await this.userService.findByUnique(req.user.sub);
+      if (!user) throw new NotFoundException();
 
-    return this.itemService.burn(user.publicAddress, tokenId);
+      await this.itemService.burn(user.publicAddress, tokenId);
+    } catch (err: unknown) {
+      handleErrors(err);
+    }
   }
 
   /*
@@ -101,24 +92,27 @@ export class ItemController {
   //--------------------------------------------------------------------------
   @UseGuards(AuthGuard)
   @Get('mine')
-  async getMine(@Req() req: Request) {
-    const user = await this.userService.findByUnique(req.user.sub);
-    if (!user) throw new NotFoundException();
+  async getMine(@Req() req: Request): Promise<{ items: Item[] } | undefined> {
+    try {
+      const user = await this.userService.findByUnique(req.user.sub);
+      if (!user) throw new NotFoundException();
 
-    return this.itemService.findByOwner(user.publicAddress);
+      return { items: await this.itemService.findByOwner(user.publicAddress) };
+    } catch (err: unknown) {
+      handleErrors(err);
+    }
   }
 
   // Get NFTs by owner's address
   //--------------------------------------------------------------------------
   @Get(':address')
-  async getByAddress(@Param('address') address: string) {
+  async getByAddress(
+    @Param('address') address: string,
+  ): Promise<{ items: Item[] } | undefined> {
     try {
-      return this.itemService.findByOwner(address);
+      return { items: await this.itemService.findByOwner(address) };
     } catch (err: unknown) {
-      handlePrismaErrors(err);
-
-      console.error(err);
-      throw new InternalServerErrorException();
+      handleErrors(err);
     }
   }
 
@@ -127,6 +121,10 @@ export class ItemController {
   @UseGuards(AuthGuard)
   @Get(':tokenId')
   async findOne(@Param('tokenId') tokenId: string) {
-    return this.itemService.findByTokenId(tokenId);
+    try {
+      return { item: await this.itemService.findByTokenId(tokenId) };
+    } catch (err: unknown) {
+      handleErrors(err);
+    }
   }
 }

@@ -9,7 +9,6 @@ import {
   Controller,
   Delete,
   Get,
-  InternalServerErrorException,
   NotFoundException,
   Param,
   Patch,
@@ -17,12 +16,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import handlePrismaErrors from 'src/errors/handlePrismaErrors';
-
-import { AuthGuard } from '../guards/auth/auth.guard';
-import { UserService } from './user.service';
+import { handleErrors } from 'src/errors/handleErrors';
 import { RemovePasswordFromArrayInterceptor } from 'src/interceptors/remove-password-from-array/remove-password-from-array.interceptor';
 import { RemovePasswordInterceptor } from 'src/interceptors/remove-password/remove-password.interceptor';
+
+import { AuthGuard } from '../guards/auth/auth.guard';
+import { ResponseUserDto } from './dto/reponse-user.dto';
+import { UserService } from './user.service';
 
 /*
 |--------------------------------------------------------------------------
@@ -38,12 +38,11 @@ export class UserController {
   @UseGuards(AuthGuard)
   @UseInterceptors(RemovePasswordFromArrayInterceptor)
   @Get()
-  async findAll() {
+  async findAll(): Promise<{ users: ResponseUserDto[] } | undefined> {
     try {
-      return this.userService.findAll();
+      return { users: await this.userService.findAll() };
     } catch (err: unknown) {
-      console.error(err);
-      throw new InternalServerErrorException();
+      handleErrors(err);
     }
   }
 
@@ -54,13 +53,10 @@ export class UserController {
     try {
       const user = await this.userService.findByUnique(id);
       if (!user) throw new NotFoundException();
+
+      return { user: user };
     } catch (err: unknown) {
-      if (err instanceof NotFoundException) throw err;
-
-      handlePrismaErrors(err);
-
-      console.error(err);
-      throw new InternalServerErrorException();
+      handleErrors(err);
     }
   }
 
@@ -72,12 +68,9 @@ export class UserController {
     @Body() updateUserDto: Prisma.UserUpdateInput,
   ) {
     try {
-      return this.userService.update(id, updateUserDto);
+      return { user: await this.userService.update(id, updateUserDto) };
     } catch (err: unknown) {
-      handlePrismaErrors(err);
-
-      console.error(err);
-      throw new InternalServerErrorException();
+      handleErrors(err);
     }
   }
 
@@ -86,12 +79,9 @@ export class UserController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {
-      return this.userService.remove(id);
+      return { user: await this.userService.remove(id) };
     } catch (err: unknown) {
-      handlePrismaErrors(err);
-
-      console.error(err);
-      throw new InternalServerErrorException();
+      handleErrors(err);
     }
   }
 }

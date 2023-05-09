@@ -44,27 +44,33 @@ export class TransferService {
   // By sender
   //--------------------------------------------------------------------------
   async findByFrom(from: string) {
-    return this.prismaService.transfer.findMany({
-      where: { from },
-      include: { fromUser: true, toUser: true },
-    });
+    return {
+      transfers: await this.prismaService.transfer.findMany({
+        where: { from },
+        include: { fromUser: true, toUser: true },
+      }),
+    };
   }
 
   // By recipient
   //--------------------------------------------------------------------------
   async findByTo(to: string) {
-    return this.prismaService.transfer.findMany({
-      where: { to },
-      include: { fromUser: true, toUser: true },
-    });
+    return {
+      transfers: this.prismaService.transfer.findMany({
+        where: { to },
+        include: { fromUser: true, toUser: true },
+      }),
+    };
   }
 
   // By NFT tokenId
   //--------------------------------------------------------------------------
   async findByTokenId(tokenId: string) {
-    return this.prismaService.transfer.findMany({
-      where: { item: { tokenId } },
-      include: { fromUser: true, toUser: true },
-    });
+    return {
+      transfers: this.prismaService.transfer.findMany({
+        where: { item: { tokenId } },
+        include: { fromUser: true, toUser: true },
+      }),
+    };
   }
 }

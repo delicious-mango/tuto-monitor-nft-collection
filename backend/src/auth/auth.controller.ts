@@ -4,18 +4,9 @@
 | Author : Alexandre Schaffner (alexandre.s@starton.com)
 */
 
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  InternalServerErrorException,
-  Post,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
-import handlePrismaErrors from 'src/errors/handlePrismaErrors';
-import { InvalidTokenError } from 'src/errors/invalid-token-error/invalid-token-error';
+import { handleErrors } from 'src/errors/handleErrors';
 import { LowercaseAddressPipe } from 'src/pipes/lowercase/lowercase.pipe';
 
 import { AuthService } from './auth.service';
@@ -45,10 +36,7 @@ export class AuthController {
 
       res.sendStatus(201);
     } catch (err: unknown) {
-      handlePrismaErrors(err);
-
-      console.error(err);
-      throw new InternalServerErrorException();
+      handleErrors(err);
     }
   }
 
@@ -63,13 +51,7 @@ export class AuthController {
 
       res.sendStatus(200);
     } catch (err: unknown) {
-      handlePrismaErrors(err);
-
-      if (err instanceof InvalidTokenError)
-        throw new BadRequestException('Invalid token');
-
-      console.error(err);
-      throw new InternalServerErrorException();
+      handleErrors(err);
     }
   }
 
@@ -80,11 +62,7 @@ export class AuthController {
     try {
       return await this.authService.revokeToken(token);
     } catch (err: unknown) {
-      if (err instanceof InvalidTokenError)
-        throw new BadRequestException('Invalid token');
-
-      console.error(err);
-      throw new InternalServerErrorException();
+      handleErrors(err);
     }
   }
 }

@@ -9,18 +9,15 @@ import {
   Controller,
   Get,
   HttpCode,
-  HttpException,
-  InternalServerErrorException,
   Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { AxiosError } from 'axios';
 import { nullAddress } from 'src/contracts/constants';
 import { TransferSingle } from 'src/contracts/transfer-single/transfer-single.interface';
 import { EmailService } from 'src/email/email.service';
-import handlePrismaErrors from 'src/errors/handlePrismaErrors';
+import { handleErrors } from 'src/errors/handleErrors';
 import { AuthGuard } from 'src/guards/auth/auth.guard';
 import { StartonGuard } from 'src/guards/starton/starton.guard';
 import { ItemService } from 'src/item/item.service';
@@ -51,7 +48,7 @@ export class TransferController {
   @UseGuards(StartonGuard)
   @Post('webhook')
   @HttpCode(200)
-  async catchTransfer(@Body() body: any) {
+  async catchTransfer(@Body() body: any): Promise<void> {
     try {
       const { from, to, id }: TransferSingle = body.data.transferSingle;
       const transfer: Prisma.TransferCreateInput = {
@@ -126,10 +123,7 @@ export class TransferController {
 
       return;
     } catch (err: unknown) {
-      console.error(err);
-      handlePrismaErrors(err);
-
-      throw new InternalServerErrorException();
+      handleErrors(err);
     }
   }
 
@@ -140,19 +134,13 @@ export class TransferController {
   */
   @UseGuards(AuthGuard)
   @Post()
-  async transfer(@Body() body: TransferDto) {
+  async transfer(@Body() body: TransferDto): Promise<void> {
     try {
       const { from, to, id } = body;
 
       await this.transferService.transfer(from, to, id);
     } catch (err: unknown) {
-      if (err instanceof AxiosError)
-        throw new HttpException(
-          err.response?.data.message,
-          Number(err.response?.status),
-        );
-
-      handlePrismaErrors(err);
+      handleErrors(err);
     }
   }
 
@@ -165,21 +153,33 @@ export class TransferController {
   // By sender
   //--------------------------------------------------------------------------
   @Get('/from/:address')
-  findByFrom(@Param('address') address: string) {
-    return this.transferService.findByFrom(address);
+  async findByFrom(@Param('address') address: string) {
+    try {
+      return { transfers: await this.transferService.findByFrom(address) };
+    } catch (err: unknown) {
+      handleErrors(err);
+    }
   }
 
   // By recipient
   //--------------------------------------------------------------------------
   @Get('/to/:address')
-  findByTo(@Param('address') address: string) {
-    return this.transferService.findByTo(address);
+  async findByTo(@Param('address') address: string) {
+    try {
+      return { transfers: await this.transferService.findByTo(address) };
+    } catch (err: unknown) {
+      handleErrors(err);
+    }
   }
 
   // By item
   //--------------------------------------------------------------------------
   @Get('/item/:tokenId')
-  findByItem(@Param('tokenId') tokenId: string) {
-    return this.transferService.findByTokenId(tokenId);
+  async findByItem(@Param('tokenId') tokenId: string) {
+    try {
+      return { transfers: await this.transferService.findByTokenId(tokenId) };
+    } catch (err: unknown) {
+      handleErrors(err);
+    }
   }
 }
