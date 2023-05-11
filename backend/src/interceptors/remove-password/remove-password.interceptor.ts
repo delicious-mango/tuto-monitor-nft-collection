@@ -24,8 +24,8 @@ import { User } from 'src/contracts/user/user.interface';
 export class RemovePasswordInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
-      map((data: User): SafeUser => {
-        delete data.password;
+      map((data: { user: User }): { user: SafeUser } => {
+        delete data.user.password;
         return data;
       }),
     );

@@ -4,7 +4,7 @@
 | Author : Alexandre Schaffner (alexandre.s@starton.com)
 */
 
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RevokedToken } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -34,7 +34,7 @@ export class AuthService {
   async signUp(signUpDto: SignUpDto): Promise<string> {
     const user = await this.userService.create(signUpDto);
 
-    return this.jwtService.signAsync(
+    return await this.jwtService.signAsync(
       {},
       {
         jwtid: uuidv4(),
@@ -51,8 +51,9 @@ export class AuthService {
     );
 
     if (!(await bcrypt.compare(signInDto.password, credentials.password)))
-      throw new HttpException('Invalid credentials', 401);
-    return this.jwtService.signAsync(
+      throw new UnauthorizedException('Invalid credentials');
+
+    return await this.jwtService.signAsync(
       {},
       {
         jwtid: uuidv4(),
@@ -64,7 +65,7 @@ export class AuthService {
   // sign-out / revoke token method
   //--------------------------------------------------------------------------
   async revokeToken(jti: string): Promise<RevokedToken> {
-    return this.prisma.revokedToken.create({
+    return await this.prisma.revokedToken.create({
       data: { jti },
     });
   }
