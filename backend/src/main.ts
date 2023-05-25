@@ -28,7 +28,7 @@ async function bootstrap() {
     .addTag('Cryptomancy')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('doc', app, document);
+  SwaggerModule.setup('docs', app, document);
 
   // Global middlewares
   //--------------------------------------------------------------------------

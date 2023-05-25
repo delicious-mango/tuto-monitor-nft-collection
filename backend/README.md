@@ -1,36 +1,39 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This project is an example of how to create a JWT-based authentication system with NestJS.
 
 ## Installation
 
 ```bash
 $ yarn install
 ```
+
+### Setting up your .env fie
+
+You need to create a `.env` file in the root of your project and add the following variables:
+
+```
+DATABASE_URL="{DATABASE_URL}"
+JWT_SECRET="{STRONG_RANDOM_STRING}"
+STARTON_SECRET="{STARTON_SECRET_TO_VERIFY_STARTONS_SIGNATURES}"
+STARTON_API_KEY="{STARTON_API_KEY}"
+EMAIL_USER="{SMTP_SERVER_EMAIL_ADDRESS}"
+EMAIL_PASS="{SMTP_SERVER_EMAIL_PASSWORD}"
+EMAIL_HOST="smtp.elasticemail.com" # or any other SMTP server/relay you want to use
+EMAIL_PORT="2525" # choose the port that your SMTP server/relay uses
+```
+
+`DATABASE_URL` specifies the connection URL to connect to the database, and `JWT_SECRET` is the secret used to sign the JWTs. You can generate a strong secret by running the following command in your terminal:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(256).toString('base64'));"
+```
+
+You can find your `STARTON_SECRET` on your Starton dashboard under _Your project_ > _Developer_ > _Webhook_.
+
+You can find your `STARTON_API_KEY` on your Starton dashboard under _Your Project_ > _Developer_ > _API keys_.
+
+To configure EMAIL\_.\* variables, you can create an account on [Elastic Email](https://elasticemail.com/) and use these credentials.
 
 ## Running the app
 
@@ -44,6 +47,11 @@ $ yarn run start:dev
 # production mode
 $ yarn run start:prod
 ```
+
+## Usage
+
+1. Start the server: `npm start` or `yarn start`
+2. Use a REST client like Postman or Insomnia to send requests to the server. You can find the documentation at http://localhost:3000/docs
 
 ## Test
 
@@ -60,14 +68,14 @@ $ yarn run test:cov
 
 ## Support
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+At Starton, our goal is to provide you with excellent support. If you have any concerns or questions regarding this project or any other project, please reach out to us for assistance. Our team of experts is available to help you with any questions or issues you may encounter. We're committed to providing timely and effective support to ensure your success with our products and services.
+
+To contact us, send an email to [support@starton.com](mailto:hello@starton.com) to submit a support request. We'll respond to your inquiry as soon as possible.
+
+Thank you for choosing Starton as your trusted partner for your software development needs.
 
 ## Stay in touch
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+- Author - [Alexandre Schaffner](https://github.com/delicious-mango)
+- Website - [Starton](https://starton.com/)
+- Twitter - [@starton_com](https://twitter.com/starton_com)
